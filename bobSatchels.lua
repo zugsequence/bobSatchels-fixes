@@ -1,6 +1,6 @@
 local eframe = CreateFrame("Frame");
 
-eframe.version = "bobSatchels v1.35";
+eframe.version = "bobSatchels v1.35.1";	-- DEBUG_NOTE: version bump
 eframe.lastupdate = GetTime();
 eframe.lastpoll = 0;
 eframe.lastreceive = 0;
@@ -449,12 +449,19 @@ function bobSatchelsHeader(myframe, toframe, mywidth, myheight, showeye, roletex
 	toframe.valoricon:SetPoint("TOPLEFT", myframe, "TOPLEFT", 0, 0);
 	toframe.valoricon:SetTexture("Interface\\Icons\\INV_Box_01");
 
+	--DEBUG_NOTE: the Minimap.lua interface file that defined 'LFG_EYE_TEXTURES' has been
+	--            rewritten in 10.0.0 (Dragonflight) and can no longer be referenced. The
+	--            texture reference data is reproduced below as a local variable. Newer,
+	--            higher resolution, eye textures are available. Check 'AtlasInfo.lua'...
+	local LFG_EYE_TEXTURES = { };	-- DEBUG_NOTE:	LOWER_RES: comment this line if using new texture
+	LFG_EYE_TEXTURES["default"] = { file = "Interface\\LFGFrame\\LFG-Eye", width = 512, height = 256, frames = 29, iconSize = 64, delay = 0.1 };	-- DEBUG_NOTE: LOWER_RES: comment this line if using new texture
 	if (showeye == true) then
 		toframe.eyeicon = myframe:CreateTexture(nil, "OVERLAY");
 		toframe.eyeicon:SetSize(30, 30);
 		toframe.eyeicon:SetPoint("TOPLEFT", toframe.valoricon, "TOPRIGHT", 0, 0);
-		toframe.eyeicon:SetTexture(LFG_EYE_TEXTURES["default"].file);
-		toframe.eyeicon:SetTexCoord(0, LFG_EYE_TEXTURES["default"].iconSize / LFG_EYE_TEXTURES["default"].width, 0, LFG_EYE_TEXTURES["default"].iconSize / LFG_EYE_TEXTURES["default"].height);
+		toframe.eyeicon:SetTexture(LFG_EYE_TEXTURES["default"].file);	-- DEBUG_NOTE: LOWER_RES: comment this line if using new texture
+		toframe.eyeicon:SetTexCoord(0, LFG_EYE_TEXTURES["default"].iconSize / LFG_EYE_TEXTURES["default"].width, 0, LFG_EYE_TEXTURES["default"].iconSize / LFG_EYE_TEXTURES["default"].height);	-- DEBUG_NOTE: LOWER_RES: comment this line if using new texture
+		--toframe.eyeicon:SetAtlas("groupfinder-eye-frame");	-- DEBUG_NOTE: HIGHER_RES: uncomment this line for new texture
 	end
 
 	toframe.roles = myframe:CreateFontString(nil, "OVERLAY", "GameFontNormal");
@@ -685,6 +692,8 @@ function bobSatchelsRow(myrow, myframe, mywidth, myheight, showeye)
 			self:SetNormalTexture(oframe.queues[self.ID]["reward"]);
 		elseif (oframe.queues[self.ID]["queued"] == true) then
 			if (oframe.queues[self.ID]["qtank"] == true or oframe.queues[self.ID]["qhealer"] == true or oframe.queues[self.ID]["qdamage"] == true) then
+				--self:SetCheckedTexture("");	-- DEBUG_NOTE: this fixes the overlapping READY_CHECK_READY_TEXTURE and READY_CHECK_NOT_READY_TEXTURE. Doesn't appear to break anything else -- more testing needed? 
+				self:SetChecked(false);	-- DEBUG_NOTE: this fixes the overlapping READY_CHECK_READY_TEXTURE and READY_CHECK_NOT_READY_TEXTURE. Doesn't appear to break anything else -- more testing needed?
 				self:SetNormalTexture(READY_CHECK_NOT_READY_TEXTURE);
 			end
 		end
@@ -709,6 +718,8 @@ function bobSatchelsRow(myrow, myframe, mywidth, myheight, showeye)
 	myrow.namelooted:SetCheckedTexture("");
 	myrow.namelooted:SetHighlightTexture("");
 	myrow.namelooted:SetButtonState("normal", true);
+	myrow.namelooted:ClearNormalTexture();	-- DEBUG_NOTE: this removes the blue ring on instance name
+	myrow.namelooted:ClearHighlightTexture();	-- DEBUG_NOTE: this removes strange glow on instance name
 
 	myrow.namelooted:HookScript("OnEnter", function(self)
 		if (self.ID == nil) then return; end
@@ -901,8 +912,8 @@ qframe.options:SetHeight(30);
 qframe.options:SetText("Options");
 
 qframe.options:HookScript("OnClick", function(self)
-	InterfaceOptionsFrame_OpenToCategory("bobSatchels");
-	InterfaceOptionsFrame_OpenToCategory("bobSatchels");
+	Settings.OpenToCategory("bobSatchels");	-- DEBUG_NOTE: `InterfaceOptionsFrame_OpenToCategory` was deprecated in 10.0.0.
+	Settings.OpenToCategory("bobSatchels");	-- DEBUG_NOTE: `InterfaceOptionsFrame_OpenToCategory` was deprecated in 10.0.0.
 end);
 
 qframe.queue = CreateFrame("Button", nil, qframe, "UIPanelButtonTemplate");
@@ -1022,11 +1033,12 @@ end);
 
 mapframe:SetScript("OnUpdate", function(self, elapsed)
 	if (mapframe.dragging == true) then
+		local width = (Minimap:GetWidth() / 2) + 5	-- DEBUG_NOTE: this fixes the minimap button position
 		local centerX, centerY = Minimap:GetCenter();
 		local x, y = GetCursorPosition();
 		x, y = x / self:GetEffectiveScale() - centerX, y / self:GetEffectiveScale() - centerY;
 		centerX, centerY = abs(x), abs(y);
-		centerX, centerY = (centerX / sqrt(centerX^2 + centerY^2)) * 80, (centerY / sqrt(centerX^2 + centerY^2)) * 80;
+		centerX, centerY = (centerX / sqrt(centerX^2 + centerY^2)) * width, (centerY / sqrt(centerX^2 + centerY^2)) * width;	-- DEBUG_NOTE: this fixes the minimap button position
 		centerX = x < 0 and -centerX or centerX;
 		centerY = y < 0 and -centerY or centerY;
 		bobSatchelsSaved[UnitName("player").."-"..GetRealmName()]["mapframe"] = {};
@@ -1182,8 +1194,8 @@ function oframe.onclick(which, button)
 	elseif (button == "LeftButton") then
 		oframe.refresh(true);
 	elseif (button == "RightButton" and IsShiftKeyDown() == true) then
-		InterfaceOptionsFrame_OpenToCategory("bobSatchels");
-		InterfaceOptionsFrame_OpenToCategory("bobSatchels");
+		Settings.OpenToCategory("bobSatchels");	-- DEBUG_NOTE: `InterfaceOptionsFrame_OpenToCategory` was deprecated in 10.0.0.
+		Settings.OpenToCategory("bobSatchels");	-- DEBUG_NOTE: `InterfaceOptionsFrame_OpenToCategory` was deprecated in 10.0.0.
 		oframe.refresh(false);
 	elseif (button == "RightButton") then
 		if (bobSatchelsSaved[UnitName("player").."-"..GetRealmName()]["show"] == true) then
@@ -1301,13 +1313,13 @@ function oframe.refresh(doqueue)
 
 	if (doqueue == false and (GetTime() - oframe.bagtime) > 3 and bobSatchelsSaved[UnitName("player").."-"..GetRealmName()]["autoopen"] == true) then
 		oframe.bagdone = false;
-		for i = 0, 4, 1 do
-			for j = 0, GetContainerNumSlots(i), 1 do
-				if (oframe.bagdone == false and GetContainerItemID(i, j)) then
+		for i = 0, NUM_BAG_SLOTS, 1 do	-- DEBUG_NOTE: prefer `NUM_BAG_SLOTS` over `4`
+			for j = 0, C_Container.GetContainerNumSlots(i), 1 do	-- DEBUG_NOTE: `GetContainerNumSlots` deprecated in 10.0.0
+				if (oframe.bagdone == false and C_Container.GetContainerItemID(i, j)) then	-- DEBUG_NOTE: `GetContainerItemID` deprecated in 10.0.0
 					for k, l in pairs (oframe.queues) do
 						if (oframe.queues[k]["rewardid"] and oframe.queues[k]["rewardid"] ~= "") then
-							if (tostring(GetContainerItemID(i, j)) == tostring(oframe.queues[k]["rewardid"])) then
-								UseContainerItem(i, j);
+							if (tostring(C_Container.GetContainerItemID(i, j)) == tostring(oframe.queues[k]["rewardid"])) then	-- DEBUG_NOTE: `GetContainerItemID` deprecated in 10.0.0
+								C_Container.UseContainerItem(i, j);	-- DEBUG_NOTE: `UseContainerItem` deprecated in 10.0.0
 								oframe.bagdone = true;
 							end
 						end
@@ -1583,8 +1595,8 @@ oframe.options:SetHeight(30);
 oframe.options:SetText("Options");
 
 oframe.options:HookScript("OnClick", function(self)
-	InterfaceOptionsFrame_OpenToCategory("bobSatchels");
-	InterfaceOptionsFrame_OpenToCategory("bobSatchels");
+	Settings.OpenToCategory("bobSatchels");	-- DEBUG_NOTE: `InterfaceOptionsFrame_OpenToCategory` was deprecated in 10.0.0.
+	Settings.OpenToCategory("bobSatchels");	-- DEBUG_NOTE: `InterfaceOptionsFrame_OpenToCategory` was deprecated in 10.0.0.
 end);
 
 oframe.queue = CreateFrame("Button", "bobSatchelsQueue", oframe, "UIPanelButtonTemplate");
@@ -1663,7 +1675,20 @@ function bobSatchelsRoleButtonOnUpdate(self, rolenum, role)
 		self:SetNormalTexture(READY_CHECK_NOT_READY_TEXTURE);
 		return;
 	end
+	
+	-- DEBUG_NOTE: CheckButton textures were broken. Toggling checked state
+	--             on/off or off/on depending on their state "fixes" the
+	--             problem... it works now but investigation needed?
 	self:SetCheckedTexture(READY_CHECK_READY_TEXTURE);
+	if (self:GetChecked() == true) then
+		self:SetChecked(false);
+		self:SetChecked(true);
+	elseif (self:GetChecked() == false) then
+		self:SetChecked(true);
+		self:SetChecked(false);
+	end
+	-- -- -- -- --
+	
 	self:SetNormalTexture("Interface\\Buttons\\UI-Button-Outline");
 	reward = false;
 	if (oframe.queues[self.ID]["stank"] == true or oframe.queues[self.ID]["shealer"] == true or oframe.queues[self.ID]["sdamage"] == true) then
