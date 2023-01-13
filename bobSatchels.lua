@@ -1033,7 +1033,7 @@ end);
 
 mapframe:SetScript("OnUpdate", function(self, elapsed)
 	if (mapframe.dragging == true) then
-		local width = (Minimap:GetWidth() / 2) + 5	-- DEBUG_NOTE: this fixes the minimap button position
+		local width = (Minimap:GetWidth() / 2) + 5;	-- DEBUG_NOTE: this fixes the minimap button position
 		local centerX, centerY = Minimap:GetCenter();
 		local x, y = GetCursorPosition();
 		x, y = x / self:GetEffectiveScale() - centerX, y / self:GetEffectiveScale() - centerY;
