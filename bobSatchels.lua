@@ -1,6 +1,6 @@
 local eframe = CreateFrame("Frame");
 
-eframe.version = "bobSatchels v1.35.1";	-- DEBUG_NOTE: version bump
+eframe.version = "bobSatchels v1.35.2";	-- DEBUG_NOTE: version bump
 eframe.lastupdate = GetTime();
 eframe.lastpoll = 0;
 eframe.lastreceive = 0;
@@ -592,7 +592,7 @@ function bobSatchelsRow(myrow, myframe, mywidth, myheight, showeye)
 	myrow.currency.ID = nil;
 	myrow.currency:SetPoint("TOPLEFT", myrow, "TOPLEFT", 0, 0);
 	myrow.currency:SetButtonState("normal", true);
-	myrow.currency:SetCheckedTexture("");
+	myrow.currency:SetCheckedTexture("");	-- DEBUG_NOTE: this isn't making it into the `OnUpdate` HookScript for some reason?
 
 	myrow.currency:HookScript("OnEnter", function(self)
 		if (self.ID == nil) then return; end
@@ -615,14 +615,18 @@ function bobSatchelsRow(myrow, myframe, mywidth, myheight, showeye)
 		if (oframe.queues[self.ID] == nil) then return; end
 
 		if (self:GetChecked() == true) then
+			self:ClearNormalTexture();
 			self:SetNormalTexture("");
 		else
+			self:ClearNormalTexture();
 			self:SetNormalTexture("Interface\\Buttons\\UI-Button-Outline");
 		end
 		if (oframe.queues[self.ID]["currency"] ~= "") then
-			self:SetNormalTexture(oframe.queues[self.ID]["currency"]);
+			self:ClearNormalTexture();
+			self:SetNormalTexture( tonumber(oframe.queues[self.ID]["currency"]) );	-- DEBUG_NOTE: passing string value confusing `SetNormalTexture` so convert to number
 			self:SetHighlightTexture("Interface\\Buttons\\CheckButtonHilight");
 			self:SetAlpha(1);
+			self:SetCheckedTexture("");	-- DEBUG_NOTE: why is this needed? the `myrow.currency:SetCheckedTexture("")` call doesn't seem to be propagating?
 			self:SetChecked(true);
 			self:LockHighlight();
 		else
@@ -640,7 +644,7 @@ function bobSatchelsRow(myrow, myframe, mywidth, myheight, showeye)
 	end
 	myrow.eye:Hide();
 	myrow.eye:SetPoint("TOPLEFT", myrow.currency, "TOPRIGHT", 0, 0);
-	myrow.eye:SetCheckedTexture("");
+	myrow.eye:SetCheckedTexture("");	-- DEBUG_NOTE: this isn't making it into the `OnUpdate` HookScript for some reason?
 	myrow.eye:SetHighlightTexture("Interface\\Buttons\\CheckButtonHilight");
 
 	myrow.eye:HookScript("OnClick", function(self)
@@ -676,24 +680,28 @@ function bobSatchelsRow(myrow, myframe, mywidth, myheight, showeye)
 	myrow.eye:HookScript("OnUpdate", function(self)
 		if (self.ID == nil) then return; end
 		if (oframe.queues[self.ID] == nil) then return; end
-
+		
+		self:SetCheckedTexture("");	-- DEBUG_NOTE: this fixes the overlapping READY_CHECK_READY_TEXTURE and READY_CHECK_NOT_READY_TEXTURE. NOTE: Why is this needed when there was already a call to `myrow.eye:SetCheckedTexture("");` -- why isn't the original call propagating???
 		self:UnlockHighlight();
 		if (oframe.queues[self.ID]["queued"] == true) then
 			self:SetAlpha(1);
 			self:SetChecked(true);
+			self:ClearNormalTexture();
 			self:SetNormalTexture(READY_CHECK_WAITING_TEXTURE);
 		else
 			self:SetAlpha(0.50);
 			self:SetChecked(false);
+			self:ClearNormalTexture();
 			self:SetNormalTexture("Interface\\Buttons\\UI-Button-Outline");
 		end
 		if (oframe.queues[self.ID]["stank"] == true or oframe.queues[self.ID]["shealer"] == true or oframe.queues[self.ID]["sdamage"] == true) then
 			self:LockHighlight();
-			self:SetNormalTexture(oframe.queues[self.ID]["reward"]);
+			self:ClearNormalTexture();
+			self:SetNormalTexture( tonumber(oframe.queues[self.ID]["reward"]) );	-- DEBUG_NOTE: passing string value confusing `SetNormalTexture` so convert to number
 		elseif (oframe.queues[self.ID]["queued"] == true) then
 			if (oframe.queues[self.ID]["qtank"] == true or oframe.queues[self.ID]["qhealer"] == true or oframe.queues[self.ID]["qdamage"] == true) then
-				--self:SetCheckedTexture("");	-- DEBUG_NOTE: this fixes the overlapping READY_CHECK_READY_TEXTURE and READY_CHECK_NOT_READY_TEXTURE. Doesn't appear to break anything else -- more testing needed? 
-				self:SetChecked(false);	-- DEBUG_NOTE: this fixes the overlapping READY_CHECK_READY_TEXTURE and READY_CHECK_NOT_READY_TEXTURE. Doesn't appear to break anything else -- more testing needed?
+				self:SetCheckedTexture("");	-- DEBUG_NOTE: this fixes the overlapping READY_CHECK_READY_TEXTURE and READY_CHECK_NOT_READY_TEXTURE. NOTE: unsure why this is needed when `myrow.eye:SetCheckedTexture("")` is the default. This reduces texture lag for w/e reason so keeping it here as well...
+				self:ClearNormalTexture();
 				self:SetNormalTexture(READY_CHECK_NOT_READY_TEXTURE);
 			end
 		end
@@ -1672,6 +1680,7 @@ function bobSatchelsRoleButtonOnUpdate(self, rolenum, role)
 	end
 	if (select(rolenum, UnitGetAvailableRoles("player")) == false) then
 		self:SetCheckedTexture("");
+		self:ClearNormalTexture();
 		self:SetNormalTexture(READY_CHECK_NOT_READY_TEXTURE);
 		return;
 	end
@@ -1689,6 +1698,7 @@ function bobSatchelsRoleButtonOnUpdate(self, rolenum, role)
 	end
 	-- -- -- -- --
 	
+	self:ClearNormalTexture();
 	self:SetNormalTexture("Interface\\Buttons\\UI-Button-Outline");
 	reward = false;
 	if (oframe.queues[self.ID]["stank"] == true or oframe.queues[self.ID]["shealer"] == true or oframe.queues[self.ID]["sdamage"] == true) then
@@ -1699,9 +1709,11 @@ function bobSatchelsRoleButtonOnUpdate(self, rolenum, role)
 		self:LockHighlight();
 		self:SetAlpha(1);
 		self:SetCheckedTexture("");
-		self:SetNormalTexture(oframe.queues[self.ID]["reward"]);
+		self:ClearNormalTexture();
+		self:SetNormalTexture( tonumber(oframe.queues[self.ID]["reward"]) ); -- DEBUG_NOTE: passing string value confusing `SetNormalTexture` so convert to number
 	elseif (oframe.queues[self.ID]["queued"] == true and oframe.queues[self.ID]["q"..role] == true and reward == false) then
 		self:SetCheckedTexture("");
+		self:ClearNormalTexture();
 		self:SetNormalTexture(READY_CHECK_NOT_READY_TEXTURE);
 	end
 
