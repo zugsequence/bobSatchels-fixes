@@ -1,6 +1,6 @@
 local eframe = CreateFrame("Frame");
 
-eframe.version = "bobSatchels v1.35.2";	-- DEBUG_NOTE: version bump
+eframe.version = "bobSatchels v1.35.3";	-- DEBUG_NOTE: version bump
 eframe.lastupdate = GetTime();
 eframe.lastpoll = 0;
 eframe.lastreceive = 0;
@@ -592,7 +592,6 @@ function bobSatchelsRow(myrow, myframe, mywidth, myheight, showeye)
 	myrow.currency.ID = nil;
 	myrow.currency:SetPoint("TOPLEFT", myrow, "TOPLEFT", 0, 0);
 	myrow.currency:SetButtonState("normal", true);
-	myrow.currency:SetCheckedTexture("");	-- DEBUG_NOTE: this isn't making it into the `OnUpdate` HookScript for some reason?
 
 	myrow.currency:HookScript("OnEnter", function(self)
 		if (self.ID == nil) then return; end
@@ -614,24 +613,14 @@ function bobSatchelsRow(myrow, myframe, mywidth, myheight, showeye)
 		if (self.ID == nil) then return; end
 		if (oframe.queues[self.ID] == nil) then return; end
 
-		if (self:GetChecked() == true) then
-			self:ClearNormalTexture();
-			self:SetNormalTexture("");
-		else
-			self:ClearNormalTexture();
-			self:SetNormalTexture("Interface\\Buttons\\UI-Button-Outline");
-		end
 		if (oframe.queues[self.ID]["currency"] ~= "") then
-			self:ClearNormalTexture();
 			self:SetNormalTexture( tonumber(oframe.queues[self.ID]["currency"]) );	-- DEBUG_NOTE: passing string value confusing `SetNormalTexture` so convert to number
 			self:SetHighlightTexture("Interface\\Buttons\\CheckButtonHilight");
 			self:SetAlpha(1);
-			self:SetCheckedTexture("");	-- DEBUG_NOTE: why is this needed? the `myrow.currency:SetCheckedTexture("")` call doesn't seem to be propagating?
-			self:SetChecked(true);
 			self:LockHighlight();
 		else
+			self:SetNormalTexture("Interface\\Buttons\\UI-Button-Outline");
 			self:SetAlpha(0.50);
-			self:SetChecked(false);
 			self:UnlockHighlight();
 		end
 	end);
